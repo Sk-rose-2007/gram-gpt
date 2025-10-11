@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Bot, User, Sparkles } from 'lucide-react';
+import { Send, Bot, User, Sprout } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -71,7 +71,7 @@ export default function ChatbotPage() {
                 {message.role === 'model' && (
                   <Avatar className="w-8 h-8">
                      <div className="flex h-full w-full items-center justify-center rounded-full bg-primary text-primary-foreground">
-                        <Bot className="h-5 w-5" />
+                        <Sprout className="h-5 w-5" />
                     </div>
                   </Avatar>
                 )}
@@ -97,7 +97,7 @@ export default function ChatbotPage() {
                 <div className="flex items-start gap-3 justify-start">
                     <Avatar className="w-8 h-8">
                          <div className="flex h-full w-full items-center justify-center rounded-full bg-primary text-primary-foreground">
-                            <Bot className="h-5 w-5" />
+                            <Sprout className="h-5 w-5" />
                         </div>
                     </Avatar>
                     <div className="max-w-xs md:max-w-md lg:max-w-lg rounded-lg p-3 text-sm bg-muted">
