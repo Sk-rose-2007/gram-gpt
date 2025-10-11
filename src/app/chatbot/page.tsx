@@ -1,31 +1,50 @@
 'use client';
 
 import { useState, useTransition, useRef, useEffect } from 'react';
-import { chatbot, type ChatbotInput, type ChatbotOutput } from '@/ai/flows/chatbot';
+import { chatbot, type ChatbotInput } from '@/ai/flows/chatbot';
+import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Bot, User, Sprout } from 'lucide-react';
+import { Send, Bot, User, Sprout, Mic, StopCircle, CornerDownLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 type Message = {
   role: 'user' | 'model';
   content: string;
 };
 
+const defaultQuestions = [
+  "What's the market price for organic basil?",
+  "What's the best soil type for tomatoes?",
+  "How can I encourage more growth in my fiddle leaf fig?",
+];
+
 export default function ChatbotPage() {
   const [isPending, startTransition] = useTransition();
+  const [isRecording, setIsRecording] = useState(false);
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [language, setLanguage] = useState("en-US");
 
-  const handleSendMessage = () => {
-    if (!input.trim()) return;
+  useEffect(() => {
+    if(typeof window !== 'undefined' && window.navigator) {
+        setLanguage(navigator.language || 'en-US');
+    }
+  }, []);
 
-    const userMessage: Message = { role: 'user', content: input };
+  const handleSendMessage = (messageText: string) => {
+    if (!messageText.trim()) return;
+
+    const userMessage: Message = { role: 'user', content: messageText };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput('');
@@ -33,24 +52,92 @@ export default function ChatbotPage() {
     startTransition(async () => {
       const chatbotInput: ChatbotInput = {
         history: messages,
-        message: input,
+        message: messageText,
+        language: language,
       };
       const result = await chatbot(chatbotInput);
       const modelMessage: Message = { role: 'model', content: result.response };
       setMessages([...newMessages, modelMessage]);
+
+      // Generate and play audio for the response
+      const audioResult = await textToSpeech({ text: result.response });
+      if (audioRef.current) {
+        audioRef.current.src = audioResult.audioDataUri;
+        audioRef.current.play();
+      }
     });
+  };
+
+  const startRecording = async () => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current.start();
+        setIsRecording(true);
+        toast({ title: 'Recording started...' });
+      } catch (err) {
+        console.error("Error accessing microphone:", err);
+        toast({ variant: 'destructive', title: 'Microphone Error', description: 'Could not access microphone. Please check permissions.' });
+      }
+    } else {
+      toast({ variant: 'destructive', title: 'Unsupported Browser', description: 'Audio recording is not supported by your browser.' });
+    }
+  };
+  
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      toast({ title: 'Recording stopped. Processing...' });
+      
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        const audioBlob = new Blob([event.data], { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = () => {
+          const base64Audio = reader.result as string;
+          sendAudioMessage(base64Audio);
+        };
+      };
+    }
+  };
+
+  const sendAudioMessage = (audioDataUri: string) => {
+      startTransition(async () => {
+          const chatbotInput: ChatbotInput = {
+              history: messages,
+              audio: audioDataUri,
+              language: language,
+          };
+          // First, get the transcribed text to display it
+          const transcriptionResult = await chatbot({ audio: audioDataUri });
+          const userMessage: Message = { role: 'user', content: transcriptionResult.response };
+          const newMessages = [...messages, userMessage];
+          setMessages(newMessages);
+
+          // Then, get the actual chatbot response
+          const result = await chatbot(chatbotInput);
+          const modelMessage: Message = { role: 'model', content: result.response };
+          setMessages([...newMessages, modelMessage]);
+          
+          // Generate and play audio for the response
+          const audioResult = await textToSpeech({ text: result.response });
+          if (audioRef.current) {
+            audioRef.current.src = audioResult.audioDataUri;
+            audioRef.current.play();
+          }
+      });
   };
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-        // Use `querySelector` to find the viewport element within the `ScrollArea`
         const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
         if (viewport) {
             viewport.scrollTop = viewport.scrollHeight;
         }
     }
   }, [messages]);
-
 
   return (
     <Card className="h-[calc(100vh-5rem)] flex flex-col">
@@ -60,6 +147,19 @@ export default function ChatbotPage() {
       <CardContent className="flex-1 overflow-hidden">
         <ScrollArea className="h-full" ref={scrollAreaRef}>
           <div className="space-y-4 pr-4">
+             {messages.length === 0 && !isPending && (
+                <div className="text-center text-muted-foreground">
+                    <p className="mb-4">Ask me anything about plant care, or try one of these questions:</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        {defaultQuestions.map((q, i) => (
+                            <Button key={i} variant="outline" className="h-auto whitespace-normal" onClick={() => handleSendMessage(q)}>
+                                {q}
+                            </Button>
+                        ))}
+                    </div>
+                </div>
+             )}
+
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -113,16 +213,26 @@ export default function ChatbotPage() {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !isPending && handleSendMessage()}
+            onKeyDown={(e) => e.key === 'Enter' && !isPending && handleSendMessage(input)}
             placeholder="Ask about plant care..."
-            disabled={isPending}
+            disabled={isPending || isRecording}
           />
-          <Button onClick={handleSendMessage} disabled={isPending}>
+          <Button onClick={() => handleSendMessage(input)} disabled={isPending || isRecording || !input.trim()}>
             <Send className="h-4 w-4" />
             <span className="sr-only">Send</span>
           </Button>
+          <Button 
+            variant={isRecording ? "destructive" : "outline"} 
+            size="icon" 
+            onClick={isRecording ? stopRecording : startRecording} 
+            disabled={isPending}
+            aria-label={isRecording ? 'Stop recording' : 'Start recording'}
+          >
+            {isRecording ? <StopCircle className="h-5 w-5 animate-pulse" /> : <Mic className="h-4 w-4" />}
+          </Button>
         </div>
       </CardFooter>
+       <audio ref={audioRef} className="hidden" />
     </Card>
   );
 }
