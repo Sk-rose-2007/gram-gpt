@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard,
+  Image,
   History,
   Phone,
   Settings,
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
+  { href: "/image-analysis", icon: Image, label: "Image Analysis", tooltip: "Image Analysis" },
   { href: "/chatbot", icon: Bot, label: "Chatbot", tooltip: "Chatbot" },
   { href: "/history", icon: History, label: "History", tooltip: "History" },
   { href: "/offline", icon: Phone, label: "Offline Support", tooltip: "Offline Support" },

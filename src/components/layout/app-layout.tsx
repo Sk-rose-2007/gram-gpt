@@ -34,7 +34,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-sm font-medium text-sidebar-foreground">
                 Guest User
               </span>
               <span className="text-xs text-muted-foreground">

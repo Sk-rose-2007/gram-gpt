@@ -7,12 +7,12 @@ import {
   History,
   Phone,
   Settings,
-  LayoutDashboard,
+  Image,
   Bot,
 } from "lucide-react";
 
 const titles: { [key: string]: { title: string; icon: React.ElementType } } = {
-  "/dashboard": { title: "Dashboard", icon: LayoutDashboard },
+  "/image-analysis": { title: "Image Analysis", icon: Image },
   "/chatbot": { title: "Chatbot", icon: Bot },
   "/history": { title: "History", icon: History },
   "/offline": { title: "Offline Support", icon: Phone },
@@ -29,7 +29,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-card px-4 md:px-6">
+    <header className="flex h-14 items-center gap-4 border-b bg-card/95 px-4 md:px-6 backdrop-blur-sm">
       <SidebarTrigger className="md:hidden" />
       <div className="flex items-center gap-2">
         <Icon className="h-5 w-5 text-muted-foreground" />
