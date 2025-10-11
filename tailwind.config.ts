@@ -10,9 +10,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Poppins"', 'sans-serif'],
-        body: ['"Poppins"', 'sans-serif'],
-        headline: ['"Poppins"', 'sans-serif'],
+        sans: ['"Alegreya"', 'serif'],
+        body: ['"Alegreya"', 'serif'],
+        headline: ['"Alegreya"', 'serif'],
         code: ['monospace'],
       },
       colors: {
