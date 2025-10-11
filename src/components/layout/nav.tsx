@@ -12,12 +12,12 @@ import {
   History,
   Phone,
   Settings,
-  Bot,
+  MessageCircle,
 } from "lucide-react";
 
 const navItems = [
   { href: "/image-analysis", icon: Image, label: "Image Analysis", tooltip: "Image Analysis" },
-  { href: "/chatbot", icon: Bot, label: "Ask Verdant", tooltip: "Ask Verdant" },
+  { href: "/chatbot", icon: MessageCircle, label: "AI Chat", tooltip: "AI Chat" },
   { href: "/history", icon: History, label: "History", tooltip: "History" },
   { href: "/offline", icon: Phone, label: "Offline Support", tooltip: "Offline Support" },
   { href: "/settings", icon: Settings, label: "Settings", tooltip: "Settings" },

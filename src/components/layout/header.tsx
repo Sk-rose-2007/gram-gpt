@@ -8,12 +8,12 @@ import {
   Phone,
   Settings,
   Image,
-  Bot,
+  MessageCircle,
 } from "lucide-react";
 
 const titles: { [key: string]: { title: string; icon: React.ElementType } } = {
   "/image-analysis": { title: "Image Analysis", icon: Image },
-  "/chatbot": { title: "Ask Verdant", icon: Bot },
+  "/chatbot": { title: "AI Chat", icon: MessageCircle },
   "/history": { title: "History", icon: History },
   "/offline": { title: "Offline Support", icon: Phone },
   "/settings": { title: "Settings", icon: Settings },
