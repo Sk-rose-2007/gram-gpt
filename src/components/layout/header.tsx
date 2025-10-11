@@ -8,10 +8,12 @@ import {
   Phone,
   Settings,
   LayoutDashboard,
+  Bot,
 } from "lucide-react";
 
 const titles: { [key: string]: { title: string; icon: React.ElementType } } = {
   "/dashboard": { title: "Dashboard", icon: LayoutDashboard },
+  "/chatbot": { title: "Chatbot", icon: Bot },
   "/history": { title: "History", icon: History },
   "/offline": { title: "Offline Support", icon: Phone },
   "/settings": { title: "Settings", icon: Settings },

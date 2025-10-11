@@ -12,10 +12,12 @@ import {
   History,
   Phone,
   Settings,
+  Bot,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", tooltip: "Dashboard" },
+  { href: "/chatbot", icon: Bot, label: "Chatbot", tooltip: "Chatbot" },
   { href: "/history", icon: History, label: "History", tooltip: "History" },
   { href: "/offline", icon: Phone, label: "Offline Support", tooltip: "Offline Support" },
   { href: "/settings", icon: Settings, label: "Settings", tooltip: "Settings" },
