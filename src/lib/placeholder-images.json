@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "plant-health",
+      "description": "A healthy green plant in a pot against a neutral background.",
+      "imageUrl": "https://picsum.photos/seed/plant1/800/600",
+      "imageHint": "healthy plant"
+    }
+  ]
 }
