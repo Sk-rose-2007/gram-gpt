@@ -2,37 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@keyframes gradient-animation {
-  0% {
-    transform: rotate(0deg) scale(1.5);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.5);
-  }
-  100% {
-    transform: rotate(360deg) scale(1.5);
-  }
-}
-
-body {
-  font-family: 'Alegreya', serif;
-  background-color: hsl(var(--background));
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at center, hsla(var(--primary), 0.1), hsla(var(--background), 0.8) 70%);
-  z-index: -1;
-  animation: gradient-animation 60s linear infinite;
-  will-change: transform;
-}
-
-
 @layer base {
   :root {
     --background: 60 56% 91%; /* Light Beige */
@@ -96,5 +65,9 @@ body::before {
   }
   body {
     @apply bg-background text-foreground;
+    background-image: url('https://images.unsplash.com/photo-1554118873-55a6d51789a0?q=80&w=2940&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
   }
 }
