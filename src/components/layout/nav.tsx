@@ -17,7 +17,7 @@ import {
 
 const navItems = [
   { href: "/image-analysis", icon: Image, label: "Image Analysis", tooltip: "Image Analysis" },
-  { href: "/chatbot", icon: MessageCircle, label: "AI Chat", tooltip: "AI Chat" },
+  { href: "/chatbot", icon: MessageCircle, label: "Plant care chat", tooltip: "Plant care chat" },
   { href: "/history", icon: History, label: "History", tooltip: "History" },
   { href: "/offline", icon: Phone, label: "Offline Support", tooltip: "Offline Support" },
   { href: "/settings", icon: Settings, label: "Settings", tooltip: "Settings" },

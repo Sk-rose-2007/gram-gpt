@@ -186,7 +186,7 @@ export default function ChatbotPage() {
   return (
     <Card className="h-[calc(100vh-5rem)] flex flex-col">
       <CardHeader className="flex flex-row justify-between items-center">
-        <CardTitle className="flex items-center gap-2"><MessageCircle /> AI Chat</CardTitle>
+        <CardTitle className="flex items-center gap-2"><MessageCircle /> Plant care chat</CardTitle>
         <div className="w-48">
             <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="w-full">
