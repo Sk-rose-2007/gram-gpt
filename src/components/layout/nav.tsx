@@ -17,7 +17,7 @@ import {
 
 const navItems = [
   { href: "/image-analysis", icon: Image, label: "Image Analysis", tooltip: "Image Analysis" },
-  { href: "/chatbot", icon: Bot, label: "Chatbot", tooltip: "Chatbot" },
+  { href: "/chatbot", icon: Bot, label: "Anything Else", tooltip: "Anything Else" },
   { href: "/history", icon: History, label: "History", tooltip: "History" },
   { href: "/offline", icon: Phone, label: "Offline Support", tooltip: "Offline Support" },
   { href: "/settings", icon: Settings, label: "Settings", tooltip: "Settings" },
@@ -45,3 +45,5 @@ export function AppNav() {
     </SidebarMenu>
   );
 }
+
+    
