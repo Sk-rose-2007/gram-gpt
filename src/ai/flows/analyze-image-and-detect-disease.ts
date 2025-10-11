@@ -35,10 +35,11 @@ const prompt = ai.definePrompt({
   name: 'analyzeImageAndDetectDiseasePrompt',
   input: {schema: AnalyzeImageAndDetectDiseaseInputSchema},
   output: {schema: AnalyzeImageAndDetectDiseaseOutputSchema},
-  prompt: `You are an expert in plant diseases. Analyze the provided image and description to detect potential diseases and provide treatment recommendations. Consider the plant's history when making your diagnosis.
-
+  prompt: `You are an expert in plant diseases. Analyze the provided image and description to detect potential diseases and provide treatment recommendations.
 Description: {{{description}}}
+{{#if history}}
 History: {{{history}}}
+{{/if}}
 Image: {{media url=photoDataUri}}`,
 });
 
