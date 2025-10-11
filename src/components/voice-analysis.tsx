@@ -3,6 +3,7 @@
 import { useState, useRef, useTransition, useEffect } from "react";
 import { processVoiceInput } from "@/ai/flows/process-voice-input";
 import { improveRecommendationsWithFeedback } from "@/ai/flows/improve-recommendations-with-feedback";
+import { textToSpeech } from "@/ai/flows/text-to-speech";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -25,6 +26,7 @@ export function VoiceAnalysis() {
   const [analysisResult, setAnalysisResult] = useState<VoiceResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
@@ -90,6 +92,14 @@ export function VoiceAnalysis() {
           });
           setAnalysisResult(result);
           addToHistory({ type: 'voice', input: base64Audio, output: result, date: new Date().toISOString() });
+
+          // Generate and play audio for the response
+          const audioResult = await textToSpeech({ text: result.textOutput });
+          if (audioRef.current) {
+            audioRef.current.src = audioResult.audioDataUri;
+            audioRef.current.play();
+          }
+
         } catch (e) {
           console.error(e);
           setError("Failed to process voice input. Please try again.");
@@ -134,6 +144,14 @@ export function VoiceAnalysis() {
           title: "Recommendation Improved",
           description: "We've updated the recommendation based on your feedback.",
         });
+
+        // Generate and play audio for the improved recommendation
+        const audioResult = await textToSpeech({ text: result.improvedRecommendation });
+        if (audioRef.current) {
+          audioRef.current.src = audioResult.audioDataUri;
+          audioRef.current.play();
+        }
+
       } catch (e) {
         console.error(e);
         toast({
@@ -238,7 +256,7 @@ export function VoiceAnalysis() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
+      <audio ref={audioRef} className="hidden" />
     </div>
   );
 }

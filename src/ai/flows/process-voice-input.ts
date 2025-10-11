@@ -27,10 +27,6 @@ const ProcessVoiceInputOutputSchema = z.object({
 });
 export type ProcessVoiceInputOutput = z.infer<typeof ProcessVoiceInputOutputSchema>;
 
-export async function processVoiceInput(input: ProcessVoiceInputInput): Promise<ProcessVoiceInputOutput> {
-  return processVoiceInputFlow(input);
-}
-
 const processVoiceInputPrompt = ai.definePrompt({
   name: 'processVoiceInputPrompt',
   input: {schema: ProcessVoiceInputInputSchema},
@@ -56,3 +52,8 @@ const processVoiceInputFlow = ai.defineFlow(
     return output!;
   }
 );
+
+
+export async function processVoiceInput(input: ProcessVoiceInputInput): Promise<ProcessVoiceInputOutput> {
+  return processVoiceInputFlow(input);
+}

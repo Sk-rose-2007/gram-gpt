@@ -11,19 +11,16 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import wav from 'wav';
 
-export const TextToSpeechInputSchema = z.object({
+const TextToSpeechInputSchema = z.object({
   text: z.string().describe('The text to be converted to speech.'),
 });
 export type TextToSpeechInput = z.infer<typeof TextToSpeechInputSchema>;
 
-export const TextToSpeechOutputSchema = z.object({
+const TextToSpeechOutputSchema = z.object({
   audioDataUri: z.string().describe("The audio output as a data URI with Base64 encoding. Format: 'data:audio/wav;base64,<encoded_data>'"),
 });
 export type TextToSpeechOutput = z.infer<typeof TextToSpeechOutputSchema>;
 
-export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpeechOutput> {
-  return textToSpeechFlow(input);
-}
 
 async function toWav(
   pcmData: Buffer,
@@ -88,3 +85,8 @@ const textToSpeechFlow = ai.defineFlow(
     };
   }
 );
+
+
+export async function textToSpeech(input: TextToSpeechInput): Promise<TextToSpeechOutput> {
+  return textToSpeechFlow(input);
+}

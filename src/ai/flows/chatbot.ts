@@ -29,10 +29,6 @@ const ChatbotOutputSchema = z.object({
 });
 export type ChatbotOutput = z.infer<typeof ChatbotOutputSchema>;
 
-export async function chatbot(input: ChatbotInput): Promise<ChatbotOutput> {
-  return chatbotFlow(input);
-}
-
 const chatbotPrompt = ai.definePrompt(
   {
     name: 'chatbotPrompt',
@@ -91,3 +87,8 @@ const chatbotFlow = ai.defineFlow(
     return output!;
   }
 );
+
+
+export async function chatbot(input: ChatbotInput): Promise<ChatbotOutput> {
+  return chatbotFlow(input);
+}

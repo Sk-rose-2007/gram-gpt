@@ -27,10 +27,6 @@ const AnalyzeImageAndDetectDiseaseOutputSchema = z.object({
 });
 export type AnalyzeImageAndDetectDiseaseOutput = z.infer<typeof AnalyzeImageAndDetectDiseaseOutputSchema>;
 
-export async function analyzeImageAndDetectDisease(input: AnalyzeImageAndDetectDiseaseInput): Promise<AnalyzeImageAndDetectDiseaseOutput> {
-  return analyzeImageAndDetectDiseaseFlow(input);
-}
-
 const prompt = ai.definePrompt({
   name: 'analyzeImageAndDetectDiseasePrompt',
   input: {schema: AnalyzeImageAndDetectDiseaseInputSchema},
@@ -54,3 +50,8 @@ const analyzeImageAndDetectDiseaseFlow = ai.defineFlow(
     return output!;
   }
 );
+
+
+export async function analyzeImageAndDetectDisease(input: AnalyzeImageAndDetectDiseaseInput): Promise<AnalyzeImageAndDetectDiseaseOutput> {
+  return analyzeImageAndDetectDiseaseFlow(input);
+}

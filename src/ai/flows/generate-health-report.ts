@@ -27,10 +27,6 @@ const GenerateHealthReportOutputSchema = z.object({
 });
 export type GenerateHealthReportOutput = z.infer<typeof GenerateHealthReportOutputSchema>;
 
-export async function generateHealthReport(input: GenerateHealthReportInput): Promise<GenerateHealthReportOutput> {
-  return generateHealthReportFlow(input);
-}
-
 const generateHealthReportPrompt = ai.definePrompt({
   name: 'generateHealthReportPrompt',
   input: {schema: GenerateHealthReportInputSchema},
@@ -62,3 +58,8 @@ const generateHealthReportFlow = ai.defineFlow(
     return output!;
   }
 );
+
+
+export async function generateHealthReport(input: GenerateHealthReportInput): Promise<GenerateHealthReportOutput> {
+  return generateHealthReportFlow(input);
+}

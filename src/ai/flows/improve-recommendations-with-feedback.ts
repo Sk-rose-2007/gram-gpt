@@ -25,12 +25,6 @@ const ImproveRecommendationsWithFeedbackOutputSchema = z.object({
 });
 export type ImproveRecommendationsWithFeedbackOutput = z.infer<typeof ImproveRecommendationsWithFeedbackOutputSchema>;
 
-export async function improveRecommendationsWithFeedback(
-  input: ImproveRecommendationsWithFeedbackInput
-): Promise<ImproveRecommendationsWithFeedbackOutput> {
-  return improveRecommendationsWithFeedbackFlow(input);
-}
-
 const prompt = ai.definePrompt({
   name: 'improveRecommendationsWithFeedbackPrompt',
   input: {schema: ImproveRecommendationsWithFeedbackInputSchema},
@@ -60,3 +54,10 @@ const improveRecommendationsWithFeedbackFlow = ai.defineFlow(
     return {improvedRecommendation: output!.improvedRecommendation};
   }
 );
+
+
+export async function improveRecommendationsWithFeedback(
+  input: ImproveRecommendationsWithFeedbackInput
+): Promise<ImproveRecommendationsWithFeedbackOutput> {
+  return improveRecommendationsWithFeedbackFlow(input);
+}
