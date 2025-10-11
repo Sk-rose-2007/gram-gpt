@@ -8,15 +8,20 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Bot, Sprout, Mic, StopCircle, VolumeX, Languages, MessageCircle } from 'lucide-react';
+import { Send, Sprout, Mic, StopCircle, Languages, MessageCircle, Play, Pause } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 
 type Message = {
+  id: string;
   role: 'user' | 'model';
   content: string;
+  audioDataUri?: string;
+  isPlaying?: boolean;
+  audioProgress?: number;
 };
 
 const defaultQuestions = [
@@ -45,7 +50,7 @@ export default function ChatbotPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [language, setLanguage] = useState("en-US");
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [activeAudioMessageId, setActiveAudioMessageId] = useState<string | null>(null);
 
   useEffect(() => {
     if(typeof window !== 'undefined' && window.navigator) {
@@ -53,249 +58,309 @@ export default function ChatbotPage() {
     }
 
     const audioEl = audioRef.current;
-    const onAudioPlay = () => setIsAudioPlaying(true);
-    const onAudioEnd = () => setIsAudioPlaying(false);
 
+    const onAudioEnd = () => {
+      if (activeAudioMessageId) {
+        setMessages(prev => prev.map(m => m.id === activeAudioMessageId ? { ...m, isPlaying: false, audioProgress: 0 } : m));
+        setActiveAudioMessageId(null);
+      }
+    };
+
+    const onTimeUpdate = () => {
+        if (audioEl && activeAudioMessageId && audioEl.duration > 0) {
+            const progress = (audioEl.currentTime / audioEl.duration) * 100;
+             setMessages(prev => prev.map(m => m.id === activeAudioMessageId ? { ...m, audioProgress: progress } : m));
+        }
+    };
+    
     if (audioEl) {
-      audioEl.addEventListener('play', onAudioPlay);
       audioEl.addEventListener('ended', onAudioEnd);
       audioEl.addEventListener('pause', onAudioEnd);
+      audioEl.addEventListener('timeupdate', onTimeUpdate);
     }
     
     return () => {
       if (audioEl) {
-        audioEl.removeEventListener('play', onAudioPlay);
         audioEl.removeEventListener('ended', onAudioEnd);
         audioEl.removeEventListener('pause', onAudioEnd);
+        audioEl.removeEventListener('timeupdate', onTimeUpdate);
       }
     };
-  }, []);
+  }, [activeAudioMessageId]);
 
-  const playAudio = async (text: string) => {
-    if (audioRef.current && isAudioPlaying) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    const audioResult = await textToSpeech({ text });
-    if (audioRef.current) {
-      audioRef.current.src = audioResult.audioDataUri;
-      audioRef.current.play();
+
+  const toggleAudioPlayback = (messageId: string) => {
+    const message = messages.find(m => m.id === messageId);
+    if (!message || !message.audioDataUri) return;
+
+    const audioEl = audioRef.current;
+    if (!audioEl) return;
+
+    if (activeAudioMessageId === messageId) { // Currently playing, so pause it
+      audioEl.pause();
+    } else { // Not playing, or another message is playing
+      if (activeAudioMessageId) {
+        audioEl.pause(); // stop the current one
+      }
+      audioEl.src = message.audioDataUri;
+      audioEl.play();
+      setActiveAudioMessageId(messageId);
+      setMessages(prev => prev.map(m =>
+          m.id === messageId ? { ...m, isPlaying: true } :
+          m.id === activeAudioMessageId ? { ...m, isPlaying: false, audioProgress: 0 } :
+          m
+      ));
     }
   };
 
-  const handleSendMessage = (messageText: string) => {
-    if (!messageText.trim()) return;
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollAreaRef.current?.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }, 100);
+  };
 
-    const userMessage: Message = { role: 'user', content: messageText };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+  const handleSendMessage = (content: string) => {
+    if (!content.trim() && !mediaRecorderRef.current) return;
     setInput('');
 
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content };
+    setMessages(prev => [...prev, userMessage]);
+    scrollToBottom();
+
     startTransition(async () => {
+      const history = messages.map(({ audioDataUri, isPlaying, audioProgress, ...rest }) => rest);
+      
       const chatbotInput: ChatbotInput = {
-        history: messages,
-        message: messageText,
+        history: history,
+        message: content,
         language: language,
       };
-      const result = await chatbot(chatbotInput);
-      const modelMessage: Message = { role: 'model', content: result.response };
-      setMessages([...newMessages, modelMessage]);
 
-      playAudio(result.response);
+      try {
+        const result = await chatbot(chatbotInput);
+        const aiResponse = result.response;
+
+        const modelMessage: Message = { id: (Date.now() + 1).toString(), role: 'model', content: aiResponse, audioProgress: 0 };
+        setMessages(prev => [...prev, modelMessage]);
+        scrollToBottom();
+
+        const audioResult = await textToSpeech({ text: aiResponse });
+        setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
+        
+      } catch (error) {
+        console.error('Error with chatbot or TTS:', error);
+        toast({
+          variant: "destructive",
+          title: "AI Error",
+          description: "There was a problem communicating with the AI. Please try again.",
+        });
+        setMessages(prev => prev.slice(0, -1));
+      }
     });
   };
 
   const startRecording = async () => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorderRef.current = new MediaRecorder(stream);
-        mediaRecorderRef.current.start();
-        setIsRecording(true);
-        toast({ title: 'Recording started...' });
-      } catch (err) {
-        console.error("Error accessing microphone:", err);
-        toast({ variant: 'destructive', title: 'Microphone Error', description: 'Could not access microphone. Please check permissions.' });
-      }
-    } else {
-      toast({ variant: 'destructive', title: 'Unsupported Browser', description: 'Audio recording is not supported by your browser.' });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      const audioChunks: Blob[] = [];
+      
+      recorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = () => {
+          const base64Audio = reader.result as string;
+          handleVoiceMessage(base64Audio);
+        };
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setIsRecording(true);
+      toast({ title: 'Recording started...' });
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Recording Error',
+        description: 'Could not start recording. Please check microphone permissions.',
+      });
     }
   };
-  
+
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       toast({ title: 'Recording stopped. Processing...' });
+    }
+  };
+
+  const handleVoiceMessage = (audioDataUri: string) => {
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: "🎤 Voice message" };
+    setMessages(prev => [...prev, userMessage]);
+    scrollToBottom();
+
+    startTransition(async () => {
+      const history = messages.map(({ audioDataUri, isPlaying, audioProgress, ...rest }) => rest);
       
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        const audioBlob = new Blob([event.data], { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = () => {
-          const base64Audio = reader.result as string;
-          sendAudioMessage(base64Audio);
-        };
-      };
-    }
+      try {
+        const result = await chatbot({ history, audio: audioDataUri, language });
+        const aiResponse = result.response;
+
+        setMessages(prev => prev.map(m => m.id === userMessage.id ? { ...m, content: `🎤: ${result.response}` } : m));
+
+        const modelMessage: Message = { id: (Date.now() + 1).toString(), role: 'model', content: aiResponse, audioProgress: 0 };
+        setMessages(prev => [...prev, modelMessage]);
+        scrollToBottom();
+
+        const audioResult = await textToSpeech({ text: aiResponse });
+        setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
+
+      } catch (error) {
+        console.error('Error with voice message:', error);
+        toast({
+          variant: "destructive",
+          title: "AI Error",
+          description: "There was a problem processing your voice message.",
+        });
+        setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+      }
+    });
   };
-
-  const sendAudioMessage = (audioDataUri: string) => {
-      startTransition(async () => {
-          const chatbotInput: ChatbotInput = {
-              history: messages,
-              audio: audioDataUri,
-              language: language,
-          };
-          // First, get the transcribed text to display it
-          const transcriptionResult = await chatbot({ audio: audioDataUri, history: [] }); // Pass empty history for transcription only
-          if (!transcriptionResult.response) {
-            toast({ variant: 'destructive', title: 'Transcription Failed', description: 'Could not understand audio. Please try again.' });
-            return;
-          }
-          const userMessage: Message = { role: 'user', content: transcriptionResult.response };
-          const newMessages = [...messages, userMessage];
-          setMessages(newMessages);
-
-          // Then, get the actual chatbot response with full history
-          const chatbotResponseInput = { ...chatbotInput, message: transcriptionResult.response };
-          const result = await chatbot(chatbotResponseInput);
-          const modelMessage: Message = { role: 'model', content: result.response };
-          setMessages([...newMessages, modelMessage]);
-          
-          playAudio(result.response);
-      });
-  };
-
-  const stopAudio = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-  };
-
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-        const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-        if (viewport) {
-            viewport.scrollTop = viewport.scrollHeight;
-        }
-    }
-  }, [messages]);
 
   return (
-    <Card className="h-[calc(100vh-5rem)] flex flex-col">
-      <CardHeader className="flex flex-row justify-between items-center">
-        <CardTitle className="flex items-center gap-2"><MessageCircle /> Plant care chat</CardTitle>
-        <div className="w-48">
-            <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="w-full">
-                    <Languages className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Select language" />
+    <div className="flex h-[calc(100vh_-_57px)]">
+       <audio ref={audioRef} className="hidden" />
+      <Card className="w-full h-full flex flex-col bg-card/80">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageCircle className="w-6 h-6 text-primary" />
+            <CardTitle>Plant care chat</CardTitle>
+          </div>
+          <div className="flex items-center gap-2">
+              <Languages className="w-5 h-5 text-muted-foreground" />
+              <Select value={language} onValueChange={setLanguage}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Language" />
                 </SelectTrigger>
                 <SelectContent>
-                    {supportedLanguages.map(lang => (
-                        <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
-                    ))}
+                  {supportedLanguages.map(lang => (
+                    <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
+                  ))}
                 </SelectContent>
-            </Select>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full" ref={scrollAreaRef}>
-          <div className="space-y-4 pr-4">
-             {messages.length === 0 && !isPending && (
-                <div className="text-center text-muted-foreground">
-                    <p className="mb-4">Ask me anything about plant care, or try one of these questions:</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                        {defaultQuestions.map((q, i) => (
-                            <Button key={i} variant="outline" className="h-auto whitespace-normal" onClick={() => handleSendMessage(q)}>
-                                {q}
-                            </Button>
-                        ))}
-                    </div>
-                </div>
-             )}
-
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={cn(
-                  'flex items-start gap-3',
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                )}
-              >
-                {message.role === 'model' && (
-                  <Avatar className="w-8 h-8">
-                     <div className="flex h-full w-full items-center justify-center rounded-full bg-primary text-primary-foreground">
-                        <Sprout className="h-5 w-5" />
-                    </div>
-                  </Avatar>
-                )}
-                <div
-                  className={cn(
-                    'max-w-xs md:max-w-md lg:max-w-lg rounded-lg p-3 text-sm',
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  )}
-                >
-                  {message.content}
-                </div>
-                 {message.role === 'user' && (
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src="https://picsum.photos/seed/user/40/40" />
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
-                )}
-              </div>
-            ))}
-             {isPending && (
-                <div className="flex items-start gap-3 justify-start">
-                    <Avatar className="w-8 h-8">
-                         <div className="flex h-full w-full items-center justify-center rounded-full bg-primary text-primary-foreground">
-                            <Sprout className="h-5 w-5" />
-                        </div>
-                    </Avatar>
-                    <div className="max-w-xs md:max-w-md lg:max-w-lg rounded-lg p-3 text-sm bg-muted">
-                        <Skeleton className="w-24 h-4" />
-                    </div>
-                </div>
-             )}
+              </Select>
           </div>
-        </ScrollArea>
-      </CardContent>
-      <CardFooter>
-        <div className="flex w-full items-center space-x-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !isPending && handleSendMessage(input)}
-            placeholder="Ask about plant care..."
-            disabled={isPending || isRecording}
-          />
-           {isAudioPlaying ? (
-             <Button variant="destructive" size="icon" onClick={stopAudio} aria-label="Stop audio">
-                <VolumeX className="h-5 w-5" />
-             </Button>
-           ) : (
-            <Button onClick={() => handleSendMessage(input)} disabled={isPending || isRecording || !input.trim()}>
-              <Send className="h-4 w-4" />
-              <span className="sr-only">Send</span>
-            </Button>
-           )}
-          <Button 
-            variant={isRecording ? "destructive" : "outline"} 
-            size="icon" 
-            onClick={isRecording ? stopRecording : startRecording} 
-            disabled={isPending}
-            aria-label={isRecording ? 'Stop recording' : 'Start recording'}
-          >
-            {isRecording ? <StopCircle className="h-5 w-5 animate-pulse" /> : <Mic className="h-4 w-4" />}
-          </Button>
-        </div>
-      </CardFooter>
-       <audio ref={audioRef} className="hidden" />
-    </Card>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-hidden p-0">
+          <ScrollArea ref={scrollAreaRef} className="h-full">
+            <div className="p-4 space-y-4">
+              {messages.length === 0 && (
+                 <div className="text-center text-muted-foreground p-8">
+                  <Sprout className="mx-auto h-12 w-12 mb-4" />
+                  <h3 className="text-lg font-semibold">Welcome to Verdant AI</h3>
+                  <p className="text-sm">Your personal plant care assistant. Try asking one of the questions below or use the microphone to talk.</p>
+                 </div>
+              )}
+              {messages.map((message) => (
+                <ChatMessage key={message.id} message={message} toggleAudioPlayback={toggleAudioPlayback} />
+              ))}
+               {isPending && messages[messages.length - 1]?.role === 'user' && (
+                <div className="flex items-start gap-3 justify-start">
+                  <Avatar className="w-8 h-8 border">
+                    <AvatarFallback><Sprout className="w-5 h-5" /></AvatarFallback>
+                  </Avatar>
+                  <div className="bg-muted rounded-lg p-3 max-w-[75%] space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </CardContent>
+        <CardFooter className="p-4 border-t">
+          <div className="w-full space-y-2">
+             {messages.length === 0 && (
+                <div className="flex flex-wrap gap-2 justify-center mb-2">
+                  {defaultQuestions.map((q, i) => (
+                    <Button key={i} variant="outline" size="sm" onClick={() => handleSendMessage(q)}>{q}</Button>
+                  ))}
+                </div>
+             )}
+            <div className="flex items-center gap-2">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(input)}
+                placeholder="Ask Verdant about your plants..."
+                disabled={isPending}
+              />
+              <Button onClick={() => handleSendMessage(input)} disabled={isPending}>
+                <Send />
+              </Button>
+              <Button onClick={isRecording ? stopRecording : startRecording} disabled={isPending} variant={isRecording ? "destructive" : "outline"}>
+                {isRecording ? <StopCircle className="animate-pulse" /> : <Mic />}
+              </Button>
+            </div>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
+
+const ChatMessage = ({ message, toggleAudioPlayback }: { message: Message, toggleAudioPlayback: (id: string) => void }) => {
+  const isUser = message.role === 'user';
+  return (
+    <div className={cn("flex items-start gap-3", isUser ? "justify-end" : "justify-start")}>
+      {!isUser && (
+        <Avatar className="w-8 h-8 border">
+          <AvatarFallback><Sprout className="w-5 h-5" /></AvatarFallback>
+        </Avatar>
+      )}
+      <div
+        className={cn(
+          'rounded-lg p-3 max-w-[85%] flex items-center gap-2',
+          isUser
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-card'
+        )}
+      >
+        <div className="flex-1 space-y-1">
+          <p className="whitespace-pre-wrap">{message.content}</p>
+          {message.audioDataUri && (
+            <div className="space-y-2 pt-2">
+              <Progress value={message.audioProgress || 0} className="h-1 bg-primary/20" />
+            </div>
+          )}
+        </div>
+        {message.audioDataUri && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="rounded-full w-8 h-8 shrink-0 bg-primary/20 hover:bg-primary/30"
+            onClick={() => toggleAudioPlayback(message.id)}
+          >
+            {message.isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            <span className="sr-only">{message.isPlaying ? "Pause" : "Play"}</span>
+          </Button>
+        )}
+      </div>
+      {isUser && (
+        <Avatar className="w-8 h-8 border">
+          <AvatarFallback>You</AvatarFallback>
+        </Avatar>
+      )}
+    </div>
+  );
+};
