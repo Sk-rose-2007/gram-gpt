@@ -14,6 +14,7 @@ import { Logo } from "@/components/layout/logo";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppHeader } from "./header";
+import { cn } from "@/lib/utils";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -45,7 +46,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <AppHeader />
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className={cn("flex-1 p-4 md:p-6 bg-transparent")}>{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
