@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Bot, User, Sprout, Mic, StopCircle, CornerDownLeft } from 'lucide-react';
+import { Send, Bot, User, Sprout, Mic, StopCircle, CornerDownLeft, VolumeX } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -34,12 +34,43 @@ export default function ChatbotPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [language, setLanguage] = useState("en-US");
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   useEffect(() => {
     if(typeof window !== 'undefined' && window.navigator) {
         setLanguage(navigator.language || 'en-US');
     }
+
+    const audioEl = audioRef.current;
+    const onAudioPlay = () => setIsAudioPlaying(true);
+    const onAudioEnd = () => setIsAudioPlaying(false);
+
+    if (audioEl) {
+      audioEl.addEventListener('play', onAudioPlay);
+      audioEl.addEventListener('ended', onAudioEnd);
+      audioEl.addEventListener('pause', onAudioEnd);
+    }
+    
+    return () => {
+      if (audioEl) {
+        audioEl.removeEventListener('play', onAudioPlay);
+        audioEl.removeEventListener('ended', onAudioEnd);
+        audioEl.removeEventListener('pause', onAudioEnd);
+      }
+    };
   }, []);
+
+  const playAudio = async (text: string) => {
+    if (audioRef.current && isAudioPlaying) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    const audioResult = await textToSpeech({ text });
+    if (audioRef.current) {
+      audioRef.current.src = audioResult.audioDataUri;
+      audioRef.current.play();
+    }
+  };
 
   const handleSendMessage = (messageText: string) => {
     if (!messageText.trim()) return;
@@ -59,12 +90,7 @@ export default function ChatbotPage() {
       const modelMessage: Message = { role: 'model', content: result.response };
       setMessages([...newMessages, modelMessage]);
 
-      // Generate and play audio for the response
-      const audioResult = await textToSpeech({ text: result.response });
-      if (audioRef.current) {
-        audioRef.current.src = audioResult.audioDataUri;
-        audioRef.current.play();
-      }
+      playAudio(result.response);
     });
   };
 
@@ -111,23 +137,30 @@ export default function ChatbotPage() {
               language: language,
           };
           // First, get the transcribed text to display it
-          const transcriptionResult = await chatbot({ audio: audioDataUri });
+          const transcriptionResult = await chatbot({ audio: audioDataUri, history: [] }); // Pass empty history for transcription only
+          if (!transcriptionResult.response) {
+            toast({ variant: 'destructive', title: 'Transcription Failed', description: 'Could not understand audio. Please try again.' });
+            return;
+          }
           const userMessage: Message = { role: 'user', content: transcriptionResult.response };
           const newMessages = [...messages, userMessage];
           setMessages(newMessages);
 
-          // Then, get the actual chatbot response
-          const result = await chatbot(chatbotInput);
+          // Then, get the actual chatbot response with full history
+          const chatbotResponseInput = { ...chatbotInput, message: transcriptionResult.response };
+          const result = await chatbot(chatbotResponseInput);
           const modelMessage: Message = { role: 'model', content: result.response };
           setMessages([...newMessages, modelMessage]);
           
-          // Generate and play audio for the response
-          const audioResult = await textToSpeech({ text: result.response });
-          if (audioRef.current) {
-            audioRef.current.src = audioResult.audioDataUri;
-            audioRef.current.play();
-          }
+          playAudio(result.response);
       });
+  };
+
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
   };
 
   useEffect(() => {
@@ -217,10 +250,16 @@ export default function ChatbotPage() {
             placeholder="Ask about plant care..."
             disabled={isPending || isRecording}
           />
-          <Button onClick={() => handleSendMessage(input)} disabled={isPending || isRecording || !input.trim()}>
-            <Send className="h-4 w-4" />
-            <span className="sr-only">Send</span>
-          </Button>
+           {isAudioPlaying ? (
+             <Button variant="destructive" size="icon" onClick={stopAudio} aria-label="Stop audio">
+                <VolumeX className="h-5 w-5" />
+             </Button>
+           ) : (
+            <Button onClick={() => handleSendMessage(input)} disabled={isPending || isRecording || !input.trim()}>
+              <Send className="h-4 w-4" />
+              <span className="sr-only">Send</span>
+            </Button>
+           )}
           <Button 
             variant={isRecording ? "destructive" : "outline"} 
             size="icon" 

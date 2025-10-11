@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useState, useRef, useTransition, useEffect } from "react";
-import { processVoiceInput } from "@/ai/flows/process-voice-input";
-import { improveRecommendationsWithFeedback } from "@/ai/flows/improve-recommendations-with-feedback";
-import { textToSpeech } from "@/ai/flows/text-to-speech";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Mic, StopCircle, ThumbsUp, ThumbsDown, Bot, AlertTriangle, Sparkles, Languages } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
-import { Textarea } from "./ui/textarea";
-import { addToHistory } from "@/lib/history";
+import { useState, useRef, useTransition, useEffect } from 'react';
+import { processVoiceInput } from '@/ai/flows/process-voice-input';
+import { improveRecommendationsWithFeedback } from '@/ai/flows/improve-recommendations-with-feedback';
+import { textToSpeech } from '@/ai/flows/text-to-speech';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Mic, StopCircle, ThumbsUp, ThumbsDown, Bot, AlertTriangle, Sparkles, Languages, VolumeX } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
+import { Textarea } from './ui/textarea';
+import { addToHistory } from '@/lib/history';
 
 type VoiceResult = {
   textOutput: string;
@@ -22,23 +22,60 @@ export function VoiceAnalysis() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [analysisResult, setAnalysisResult] = useState<VoiceResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
-  const [feedbackText, setFeedbackText] = useState("");
-  const [originalRecommendation, setOriginalRecommendation] = useState("");
+  const [feedbackText, setFeedbackText] = useState('');
+  const [originalRecommendation, setOriginalRecommendation] = useState('');
   const [improvedRecommendation, setImprovedRecommendation] = useState<string | null>(null);
-  const [language, setLanguage] = useState("en-US");
+  const [language, setLanguage] = useState('en-US');
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   useEffect(() => {
-    if(typeof window !== 'undefined' && window.navigator) {
-        setLanguage(navigator.language || 'en-US');
+    if (typeof window !== 'undefined' && window.navigator) {
+      setLanguage(navigator.language || 'en-US');
     }
+    
+    const audioEl = audioRef.current;
+    const onAudioPlay = () => setIsAudioPlaying(true);
+    const onAudioEnd = () => setIsAudioPlaying(false);
+
+    if (audioEl) {
+      audioEl.addEventListener('play', onAudioPlay);
+      audioEl.addEventListener('ended', onAudioEnd);
+      audioEl.addEventListener('pause', onAudioEnd);
+    }
+    
+    return () => {
+      if (audioEl) {
+        audioEl.removeEventListener('play', onAudioPlay);
+        audioEl.removeEventListener('ended', onAudioEnd);
+        audioEl.removeEventListener('pause', onAudioEnd);
+      }
+    };
   }, []);
+  
+  const playAudio = async (text: string) => {
+    if (audioRef.current && isAudioPlaying) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    const audioResult = await textToSpeech({ text });
+    if (audioRef.current) {
+      audioRef.current.src = audioResult.audioDataUri;
+      audioRef.current.play();
+    }
+  };
+  
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  };
 
   const startRecording = async () => {
     setAnalysisResult(null);
@@ -57,16 +94,15 @@ export function VoiceAnalysis() {
         };
 
         mediaRecorderRef.current.onstop = () => {
-          const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-          setAudioBlob(audioBlob);
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
           handleAnalyze(audioBlob);
         };
       } catch (err) {
-        console.error("Error accessing microphone:", err);
-        setError("Could not access microphone. Please check permissions.");
+        console.error('Error accessing microphone:', err);
+        setError('Could not access microphone. Please check permissions.');
       }
     } else {
-      setError("Audio recording is not supported by your browser.");
+      setError('Audio recording is not supported by your browser.');
     }
   };
 
@@ -82,7 +118,7 @@ export function VoiceAnalysis() {
     reader.readAsDataURL(blob);
     reader.onloadend = () => {
       const base64Audio = reader.result as string;
-      
+
       startTransition(async () => {
         setError(null);
         try {
@@ -93,20 +129,14 @@ export function VoiceAnalysis() {
           setAnalysisResult(result);
           addToHistory({ type: 'voice', input: base64Audio, output: result, date: new Date().toISOString() });
 
-          // Generate and play audio for the response
-          const audioResult = await textToSpeech({ text: result.textOutput });
-          if (audioRef.current) {
-            audioRef.current.src = audioResult.audioDataUri;
-            audioRef.current.play();
-          }
-
+          playAudio(result.textOutput);
         } catch (e) {
           console.error(e);
-          setError("Failed to process voice input. Please try again.");
+          setError('Failed to process voice input. Please try again.');
           toast({
-            variant: "destructive",
-            title: "Analysis Failed",
-            description: "An error occurred during voice analysis.",
+            variant: 'destructive',
+            title: 'Analysis Failed',
+            description: 'An error occurred during voice analysis.',
           });
         }
       });
@@ -116,8 +146,8 @@ export function VoiceAnalysis() {
   const handleFeedback = (isGood: boolean) => {
     if (isGood) {
       toast({
-        title: "Feedback Received",
-        description: "Thank you for helping us improve!",
+        title: 'Feedback Received',
+        description: 'Thank you for helping us improve!',
       });
     } else {
       if (analysisResult?.textOutput) {
@@ -126,38 +156,32 @@ export function VoiceAnalysis() {
       }
     }
   };
-  
+
   const submitFeedback = () => {
-    if(!feedbackText) return;
+    if (!feedbackText) return;
 
     startTransition(async () => {
       try {
         const result = await improveRecommendationsWithFeedback({
           plantName: "the user's plant",
           recommendation: originalRecommendation,
-          feedback: feedbackText
+          feedback: feedbackText,
         });
         setImprovedRecommendation(result.improvedRecommendation);
         setShowFeedbackDialog(false);
-        setFeedbackText("");
+        setFeedbackText('');
         toast({
-          title: "Recommendation Improved",
+          title: 'Recommendation Improved',
           description: "We've updated the recommendation based on your feedback.",
         });
 
-        // Generate and play audio for the improved recommendation
-        const audioResult = await textToSpeech({ text: result.improvedRecommendation });
-        if (audioRef.current) {
-          audioRef.current.src = audioResult.audioDataUri;
-          audioRef.current.play();
-        }
-
+        playAudio(result.improvedRecommendation);
       } catch (e) {
         console.error(e);
         toast({
-          variant: "destructive",
-          title: "Feedback Failed",
-          description: "Could not process feedback. Please try again.",
+          variant: 'destructive',
+          title: 'Feedback Failed',
+          description: 'Could not process feedback. Please try again.',
         });
       }
     });
@@ -184,11 +208,13 @@ export function VoiceAnalysis() {
             </>
           )}
         </Button>
-        <p className="text-sm text-muted-foreground flex items-center gap-2"><Languages className="h-4 w-4"/> Language: {language}</p>
+        <p className="text-sm text-muted-foreground flex items-center gap-2">
+          <Languages className="h-4 w-4" /> Language: {language}
+        </p>
       </div>
 
       {isPending && (
-         <div className="space-y-4 pt-4 text-left">
+        <div className="space-y-4 pt-4 text-left">
           <Skeleton className="h-32 w-full" />
         </div>
       )}
@@ -204,9 +230,16 @@ export function VoiceAnalysis() {
       {analysisResult && (
         <div className="space-y-4 pt-4 text-left">
           <Card>
-            <CardHeader className="flex flex-row items-center gap-2">
-                <Bot className="w-6 h-6 text-primary"/>
-                <CardTitle>AI Recommendation</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Bot className="w-6 h-6 text-primary" />
+                    <CardTitle>AI Recommendation</CardTitle>
+                </div>
+                {isAudioPlaying && (
+                    <Button variant="outline" size="icon" onClick={stopAudio}>
+                        <VolumeX className="h-5 w-5" />
+                    </Button>
+                )}
             </CardHeader>
             <CardContent>
               <p>{analysisResult.textOutput}</p>
@@ -214,9 +247,18 @@ export function VoiceAnalysis() {
           </Card>
 
           {improvedRecommendation && (
-            <Alert variant="default" className="bg-secondary">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <AlertTitle>Improved Recommendation</AlertTitle>
+             <Alert variant="default" className="bg-secondary text-left">
+                <CardHeader className="flex flex-row items-center justify-between p-0 mb-2">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        <AlertTitle>Improved Recommendation</AlertTitle>
+                    </div>
+                     {isAudioPlaying && (
+                        <Button variant="outline" size="icon" onClick={stopAudio} className="h-7 w-7">
+                            <VolumeX className="h-4 w-4" />
+                        </Button>
+                    )}
+                </CardHeader>
               <AlertDescription>
                 {improvedRecommendation}
               </AlertDescription>
@@ -243,7 +285,7 @@ export function VoiceAnalysis() {
               Help us improve our recommendations. What was wrong or could be better?
             </DialogDescription>
           </DialogHeader>
-          <Textarea 
+          <Textarea
             placeholder="e.g., The advice was too generic..."
             value={feedbackText}
             onChange={(e) => setFeedbackText(e.target.value)}
