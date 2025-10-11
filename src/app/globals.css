@@ -2,13 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes gradient-animation {
+  0% {
+    transform: rotate(0deg) scale(1.5);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.5);
+  }
+  100% {
+    transform: rotate(360deg) scale(1.5);
+  }
+}
+
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  background-image: url('https://images.unsplash.com/photo-1572204332393-3b39a8041459?q=80&w=2070&auto=format&fit=crop');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
+  font-family: 'Alegreya', serif;
+  background-color: hsl(var(--background));
 }
 
 body::before {
@@ -18,9 +26,12 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: hsla(var(--background), 0.9);
+  background: radial-gradient(circle at center, hsla(var(--primary), 0.1), hsla(var(--background), 0.8) 70%);
   z-index: -1;
+  animation: gradient-animation 60s linear infinite;
+  will-change: transform;
 }
+
 
 @layer base {
   :root {
@@ -48,7 +59,7 @@ body::before {
     --chart-3: 20 60% 50%;
     --chart-4: 20 50% 60%;
     --chart-5: 60 50% 80%;
-    --radius: 0.5rem;
+    --radius: 0.8rem;
   }
 
   .dark {
