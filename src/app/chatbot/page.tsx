@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Bot, User, Sprout, Mic, StopCircle, CornerDownLeft, VolumeX, Languages } from 'lucide-react';
+import { Send, Bot, User, Sprout, Mic, StopCircle, VolumeX, Languages } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -186,7 +186,7 @@ export default function ChatbotPage() {
   return (
     <Card className="h-[calc(100vh-5rem)] flex flex-col">
       <CardHeader className="flex flex-row justify-between items-center">
-        <CardTitle className="flex items-center gap-2"><Bot /> Anything Else</CardTitle>
+        <CardTitle className="flex items-center gap-2"><Bot /> Ask Verdant</CardTitle>
         <div className="w-48">
             <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="w-full">
@@ -299,5 +299,3 @@ export default function ChatbotPage() {
     </Card>
   );
 }
-
-    

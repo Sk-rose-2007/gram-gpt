@@ -13,7 +13,7 @@ import {
 
 const titles: { [key: string]: { title: string; icon: React.ElementType } } = {
   "/image-analysis": { title: "Image Analysis", icon: Image },
-  "/chatbot": { title: "Anything Else", icon: Bot },
+  "/chatbot": { title: "Ask Verdant", icon: Bot },
   "/history": { title: "History", icon: History },
   "/offline": { title: "Offline Support", icon: Phone },
   "/settings": { title: "Settings", icon: Settings },
@@ -38,5 +38,3 @@ export function AppHeader() {
     </header>
   );
 }
-
-    
