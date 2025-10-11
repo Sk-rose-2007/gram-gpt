@@ -32,7 +32,7 @@ body {
     --chart-3: 35 73% 55%;
     --chart-4: 25 80% 60%;
     --chart-5: 43 74% 66%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
