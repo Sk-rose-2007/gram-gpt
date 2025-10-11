@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Bot, User, Sprout, Mic, StopCircle, CornerDownLeft, VolumeX } from 'lucide-react';
+import { Send, Bot, User, Sprout, Mic, StopCircle, CornerDownLeft, VolumeX, Languages } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Message = {
   role: 'user' | 'model';
@@ -22,6 +23,16 @@ const defaultQuestions = [
   "What's the market price for organic basil?",
   "What's the best soil type for tomatoes?",
   "How can I encourage more growth in my fiddle leaf fig?",
+];
+
+const supportedLanguages = [
+    { value: "en-US", label: "English" },
+    { value: "es-ES", label: "Spanish" },
+    { value: "fr-FR", label: "French" },
+    { value: "de-DE", label: "German" },
+    { value: "hi-IN", label: "Hindi" },
+    { value: "ja-JP", label: "Japanese" },
+    { value: "zh-CN", label: "Chinese" },
 ];
 
 export default function ChatbotPage() {
@@ -174,8 +185,21 @@ export default function ChatbotPage() {
 
   return (
     <Card className="h-[calc(100vh-5rem)] flex flex-col">
-      <CardHeader>
+      <CardHeader className="flex flex-row justify-between items-center">
         <CardTitle className="flex items-center gap-2"><Bot /> Plant Care Chatbot</CardTitle>
+        <div className="w-48">
+            <Select value={language} onValueChange={setLanguage}>
+                <SelectTrigger className="w-full">
+                    <Languages className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                    {supportedLanguages.map(lang => (
+                        <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden">
         <ScrollArea className="h-full" ref={scrollAreaRef}>
@@ -275,3 +299,5 @@ export default function ChatbotPage() {
     </Card>
   );
 }
+
+    
