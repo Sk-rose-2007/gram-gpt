@@ -39,10 +39,7 @@ const prompt = ai.definePrompt({
 
 Description: {{{description}}}
 History: {{{history}}}
-Image: {{media url=photoDataUri}}
-
-Diagnosis:
-Treatment Recommendations: `,
+Image: {{media url=photoDataUri}}`,
 });
 
 const analyzeImageAndDetectDiseaseFlow = ai.defineFlow(
