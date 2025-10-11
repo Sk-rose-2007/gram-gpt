@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
-  Leaf,
+  BrainCircuit,
   History,
   Phone,
   Settings,
@@ -25,7 +25,7 @@ export function AppHeader() {
     Object.keys(titles).find((key) => pathname.startsWith(key)) || "";
   const { title, icon: Icon } = titles[current] || {
     title: "Analysis",
-    icon: Leaf,
+    icon: BrainCircuit,
   };
 
   return (

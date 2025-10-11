@@ -7,7 +7,7 @@ export default function OfflinePage() {
       <div className="text-center">
         <h2 className="text-3xl font-bold tracking-tight">Offline Support</h2>
         <p className="mt-2 text-lg text-muted-foreground">
-          Stay connected to Verdant Sentinel even without internet.
+          Stay connected to Gram GPT even without internet.
         </p>
       </div>
       <div className="grid gap-8 md:grid-cols-2">

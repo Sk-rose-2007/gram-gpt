@@ -11,7 +11,7 @@ export default function SettingsPage() {
     const handleCheckForUpdates = () => {
         toast({
             title: "Up to Date",
-            description: "Verdant Sentinel is already running the latest version.",
+            description: "Gram GPT is already running the latest version.",
         });
     };
 
@@ -21,7 +21,7 @@ export default function SettingsPage() {
                 <CardHeader>
                     <CardTitle>Application Updates</CardTitle>
                     <CardDescription>
-                        Check for the latest version of Verdant Sentinel to ensure you have the newest features and improvements.
+                        Check for the latest version of Gram GPT to ensure you have the newest features and improvements.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
