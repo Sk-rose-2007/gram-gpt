@@ -132,22 +132,22 @@ export function ImageAnalysis() {
 
         // Generate audio for both parts, but handle errors gracefully
         try {
-            const [diagnosisAudio, treatmentAudio] = await Promise.all([
-                textToSpeech({ text: result.diagnosis, language }),
-                textToSpeech({ text: result.treatmentRecommendations, language })
-            ]);
-            setAudioState(prev => ({
-                ...prev,
-                diagnosisAudioUri: diagnosisAudio.audioDataUri,
-                treatmentAudioUri: treatmentAudio.audioDataUri,
-            }));
+          const [diagnosisAudio, treatmentAudio] = await Promise.all([
+            textToSpeech({ text: result.diagnosis, language }),
+            textToSpeech({ text: result.treatmentRecommendations, language })
+          ]);
+          setAudioState(prev => ({
+            ...prev,
+            diagnosisAudioUri: diagnosisAudio.audioDataUri,
+            treatmentAudioUri: treatmentAudio.audioDataUri,
+          }));
         } catch (ttsError) {
-            console.error('TTS Error:', ttsError);
-            toast({
-                variant: "destructive",
-                title: "Text-to-Speech Failed",
-                description: "Could not generate audio. You may have exceeded the API quota.",
-            });
+          console.error('TTS Error:', ttsError);
+          toast({
+            variant: "destructive",
+            title: "Text-to-Speech Failed",
+            description: "Could not generate audio. You may have exceeded the API quota.",
+          });
         }
 
       } catch (e) {

@@ -147,17 +147,17 @@ export default function ChatbotPage() {
         const modelMessage: Message = { id: (Date.now() + 1).toString(), role: 'model', content: aiResponse, audioProgress: 0 };
         setMessages(prev => [...prev, modelMessage]);
         scrollToBottom();
-
+        
         try {
-            const audioResult = await textToSpeech({ text: aiResponse, language: language });
-            setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
+          const audioResult = await textToSpeech({ text: aiResponse, language: language });
+          setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
         } catch (ttsError) {
-            console.error('TTS Error:', ttsError);
-            toast({
-                variant: "destructive",
-                title: "Text-to-Speech Failed",
-                description: "Could not generate audio. You may have exceeded the API quota.",
-            });
+          console.error('TTS Error:', ttsError);
+          toast({
+            variant: "destructive",
+            title: "Text-to-Speech Failed",
+            description: "Could not generate audio. You may have exceeded the API quota.",
+          });
         }
         
       } catch (error) {
@@ -244,15 +244,15 @@ export default function ChatbotPage() {
         scrollToBottom();
 
         try {
-            const audioResult = await textToSpeech({ text: aiResponse, language: language });
-            setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
+          const audioResult = await textToSpeech({ text: aiResponse, language: language });
+          setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
         } catch (ttsError) {
-             console.error('TTS Error:', ttsError);
-            toast({
-                variant: "destructive",
-                title: "Text-to-Speech Failed",
-                description: "Could not generate audio. You may have exceeded the API quota.",
-            });
+          console.error('TTS Error:', ttsError);
+          toast({
+              variant: "destructive",
+              title: "Text-to-Speech Failed",
+              description: "Could not generate audio. You may have exceeded the API quota.",
+          });
         }
 
       } catch (error) {
