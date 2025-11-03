@@ -108,7 +108,11 @@ const chatbotFlow = ai.defineFlow(
         language: input.language,
     });
     
-    return { ...output!, transcribedMessage: transcribedMessage };
+    if (!output) {
+      return { response: "I'm sorry, I couldn't generate a response. Please try again." };
+    }
+    
+    return { ...output, transcribedMessage: transcribedMessage };
   }
 );
 
