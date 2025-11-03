@@ -125,6 +125,7 @@ export function ImageAnalysis() {
         const result = await analyzeImageAndDetectDisease({
           photoDataUri: imagePreview,
           description: "A user-uploaded plant image.",
+          language: language,
         });
         setAnalysisResult(result);
         addToHistory({ type: 'image', input: imagePreview, output: result, date: new Date().toISOString() });

@@ -18,6 +18,7 @@ const AnalyzeImageAndDetectDiseaseInputSchema = z.object({
     ),
   description: z.string().describe('Any additional description of the plant or its symptoms.'),
   history: z.string().optional().describe('The history of the plant, including previous diagnoses and treatments.'),
+  language: z.string().optional().describe('The language for the output (e.g., "en-US", "es-ES").'),
 });
 export type AnalyzeImageAndDetectDiseaseInput = z.infer<typeof AnalyzeImageAndDetectDiseaseInputSchema>;
 
@@ -32,6 +33,7 @@ const prompt = ai.definePrompt({
   input: {schema: AnalyzeImageAndDetectDiseaseInputSchema},
   output: {schema: AnalyzeImageAndDetectDiseaseOutputSchema},
   prompt: `You are an expert in plant diseases. Analyze the provided image and description to detect potential diseases and provide treatment recommendations.
+Respond in the following language: {{language}}.
 Description: {{{description}}}
 {{#if history}}
 History: {{{history}}}
