@@ -38,6 +38,8 @@ const supportedLanguages = [
     { value: "hi-IN", label: "Hindi" },
     { value: "ja-JP", label: "Japanese" },
     { value: "zh-CN", label: "Chinese" },
+    { value: "ta-IN", label: "Tamil" },
+    { value: "pa-IN", label: "Punjabi" },
 ];
 
 export default function ChatbotPage() {
