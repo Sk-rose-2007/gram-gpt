@@ -107,8 +107,7 @@ export default function ChatbotPage() {
       setActiveAudioMessageId(messageId);
       setMessages(prev => prev.map(m =>
           m.id === messageId ? { ...m, isPlaying: true } :
-          m.id === activeAudioMessageId ? { ...m, isPlaying: false, audioProgress: 0 } :
-          m
+          (m.id === activeAudioMessageId ? { ...m, isPlaying: false, audioProgress: 0 } : m)
       ));
     }
   };
@@ -147,7 +146,7 @@ export default function ChatbotPage() {
         setMessages(prev => [...prev, modelMessage]);
         scrollToBottom();
 
-        const audioResult = await textToSpeech({ text: aiResponse });
+        const audioResult = await textToSpeech({ text: aiResponse, language: language });
         setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
         
       } catch (error) {
@@ -157,7 +156,7 @@ export default function ChatbotPage() {
           title: "AI Error",
           description: "There was a problem communicating with the AI. Please try again.",
         });
-        setMessages(prev => prev.slice(0, -1));
+        setMessages(prev => prev.filter(m => m.id !== userMessage.id));
       }
     });
   };
@@ -217,13 +216,13 @@ export default function ChatbotPage() {
         const result = await chatbot({ history, audio: audioDataUri, language });
         const aiResponse = result.response;
 
-        setMessages(prev => prev.map(m => m.id === userMessage.id ? { ...m, content: `🎤: ${result.response}` } : m));
+        setMessages(prev => prev.map(m => m.id === userMessage.id ? { ...m, content: `🎤: ${aiResponse}` } : m));
 
         const modelMessage: Message = { id: (Date.now() + 1).toString(), role: 'model', content: aiResponse, audioProgress: 0 };
         setMessages(prev => [...prev, modelMessage]);
         scrollToBottom();
 
-        const audioResult = await textToSpeech({ text: aiResponse });
+        const audioResult = await textToSpeech({ text: aiResponse, language: language });
         setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
 
       } catch (error) {
