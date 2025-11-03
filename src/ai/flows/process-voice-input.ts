@@ -30,12 +30,13 @@ const processVoiceInputPrompt = ai.definePrompt({
   name: 'processVoiceInputPrompt',
   input: {schema: ProcessVoiceInputInputSchema},
   output: {schema: ProcessVoiceInputOutputSchema},
-  prompt: `Transcribe the following audio recording. The user is speaking in {{language}}.
+  prompt: `You are an expert audio transcription service. Your task is to accurately transcribe the provided audio data into text.
+The user is speaking in the following language: {{language}}.
+Your response must be only the transcribed text, with no additional commentary or formatting.
 
-  Voice Input:
-  {{media url=voiceDataUri}}
-
-  Your output should be only the transcribed text.`,
+Voice Input:
+{{media url=voiceDataUri}}
+`,
 });
 
 const processVoiceInputFlow = ai.defineFlow(
