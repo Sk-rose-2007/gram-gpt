@@ -130,17 +130,25 @@ export function ImageAnalysis() {
         setAnalysisResult(result);
         addToHistory({ type: 'image', input: imagePreview, output: result, date: new Date().toISOString() });
 
-        // Generate audio for both parts
-        const [diagnosisAudio, treatmentAudio] = await Promise.all([
-            textToSpeech({ text: result.diagnosis, language }),
-            textToSpeech({ text: result.treatmentRecommendations, language })
-        ]);
-
-        setAudioState(prev => ({
-            ...prev,
-            diagnosisAudioUri: diagnosisAudio.audioDataUri,
-            treatmentAudioUri: treatmentAudio.audioDataUri,
-        }));
+        // Generate audio for both parts, but handle errors gracefully
+        try {
+            const [diagnosisAudio, treatmentAudio] = await Promise.all([
+                textToSpeech({ text: result.diagnosis, language }),
+                textToSpeech({ text: result.treatmentRecommendations, language })
+            ]);
+            setAudioState(prev => ({
+                ...prev,
+                diagnosisAudioUri: diagnosisAudio.audioDataUri,
+                treatmentAudioUri: treatmentAudio.audioDataUri,
+            }));
+        } catch (ttsError) {
+            console.error('TTS Error:', ttsError);
+            toast({
+                variant: "destructive",
+                title: "Text-to-Speech Failed",
+                description: "Could not generate audio. You may have exceeded the API quota.",
+            });
+        }
 
       } catch (e) {
         console.error(e);

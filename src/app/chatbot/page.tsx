@@ -148,11 +148,20 @@ export default function ChatbotPage() {
         setMessages(prev => [...prev, modelMessage]);
         scrollToBottom();
 
-        const audioResult = await textToSpeech({ text: aiResponse, language: language });
-        setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
+        try {
+            const audioResult = await textToSpeech({ text: aiResponse, language: language });
+            setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
+        } catch (ttsError) {
+            console.error('TTS Error:', ttsError);
+            toast({
+                variant: "destructive",
+                title: "Text-to-Speech Failed",
+                description: "Could not generate audio. You may have exceeded the API quota.",
+            });
+        }
         
       } catch (error) {
-        console.error('Error with chatbot or TTS:', error);
+        console.error('Error with chatbot:', error);
         toast({
           variant: "destructive",
           title: "AI Error",
@@ -234,8 +243,17 @@ export default function ChatbotPage() {
         setMessages(prev => [...prev, modelMessage]);
         scrollToBottom();
 
-        const audioResult = await textToSpeech({ text: aiResponse, language: language });
-        setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
+        try {
+            const audioResult = await textToSpeech({ text: aiResponse, language: language });
+            setMessages(prev => prev.map(m => m.id === modelMessage.id ? { ...m, audioDataUri: audioResult.audioDataUri } : m));
+        } catch (ttsError) {
+             console.error('TTS Error:', ttsError);
+            toast({
+                variant: "destructive",
+                title: "Text-to-Speech Failed",
+                description: "Could not generate audio. You may have exceeded the API quota.",
+            });
+        }
 
       } catch (error) {
         console.error('Error with voice message:', error);
