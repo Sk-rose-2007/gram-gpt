@@ -276,7 +276,7 @@ export default function ChatbotPage() {
               {messages.length === 0 && (
                  <div className="text-center text-muted-foreground p-8">
                   <Sprout className="mx-auto h-12 w-12 mb-4" />
-                  <h3 className="text-lg font-semibold">Welcome to Verdant AI</h3>
+                  <h3 className="text-lg font-semibold">Welcome to GramGPT</h3>
                   <p className="text-sm">Your personal plant care assistant. Try asking one of the questions below or use the microphone to talk.</p>
                  </div>
               )}
@@ -311,7 +311,7 @@ export default function ChatbotPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(input)}
-                placeholder="Ask Verdant about your plants..."
+                placeholder="Ask about your plants..."
                 disabled={isPending}
               />
               <Button onClick={() => handleSendMessage(input)} disabled={isPending}>
