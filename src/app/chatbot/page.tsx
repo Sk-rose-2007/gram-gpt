@@ -205,19 +205,29 @@ export default function ChatbotPage() {
   };
 
   const handleVoiceMessage = (audioDataUri: string) => {
-    const userMessage: Message = { id: Date.now().toString(), role: 'user', content: "🎤 Voice message" };
+    // Add a temporary user message
+    const tempUserMessageId = Date.now().toString();
+    const userMessage: Message = { id: tempUserMessageId, role: 'user', content: "🎤 Processing voice..." };
     setMessages(prev => [...prev, userMessage]);
     scrollToBottom();
 
     startTransition(async () => {
-      const history = messages.map(({ audioDataUri, isPlaying, audioProgress, ...rest }) => rest);
+      const history = messages.filter(m => m.id !== tempUserMessageId).map(({ audioDataUri, isPlaying, audioProgress, ...rest }) => rest);
       
       try {
         const result = await chatbot({ history, audio: audioDataUri, language });
         const aiResponse = result.response;
+        const transcribedMessage = result.transcribedMessage;
 
-        setMessages(prev => prev.map(m => m.id === userMessage.id ? { ...m, content: `🎤: ${aiResponse}` } : m));
-
+        // Update the user message with the transcription
+        if (transcribedMessage) {
+            setMessages(prev => prev.map(m => m.id === tempUserMessageId ? { ...m, content: `🎤: ${transcribedMessage}` } : m));
+        } else {
+            // If transcription fails, remove the temp message
+            setMessages(prev => prev.filter(m => m.id !== tempUserMessageId));
+            throw new Error("Transcription failed");
+        }
+        
         const modelMessage: Message = { id: (Date.now() + 1).toString(), role: 'model', content: aiResponse, audioProgress: 0 };
         setMessages(prev => [...prev, modelMessage]);
         scrollToBottom();
@@ -232,7 +242,7 @@ export default function ChatbotPage() {
           title: "AI Error",
           description: "There was a problem processing your voice message.",
         });
-        setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+        setMessages(prev => prev.filter(m => m.id !== tempUserMessageId));
       }
     });
   };
@@ -240,7 +250,7 @@ export default function ChatbotPage() {
   return (
     <div className="flex h-[calc(100vh_-_57px)]">
        <audio ref={audioRef} className="hidden" />
-      <Card className="w-full h-full flex flex-col bg-card/80">
+      <Card className="w-full h-full flex flex-col bg-card/80 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageCircle className="w-6 h-6 text-primary" />

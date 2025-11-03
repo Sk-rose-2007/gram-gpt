@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { processVoiceInput } from './process-voice-input';
 
 const getMarketPriceTool = ai.defineTool(
   {
@@ -46,6 +47,7 @@ export type ChatbotInput = z.infer<typeof ChatbotInputSchema>;
 
 const ChatbotOutputSchema = z.object({
   response: z.string().describe('The AI\'s response.'),
+  transcribedMessage: z.string().optional().describe('The transcribed text from audio input.')
 });
 export type ChatbotOutput = z.infer<typeof ChatbotOutputSchema>;
 
@@ -84,30 +86,29 @@ const chatbotFlow = ai.defineFlow(
   },
   async (input) => {
     let userMessage = input.message;
+    let transcribedMessage: string | undefined = undefined;
 
     // If there's audio, transcribe it to get the text message
-    if (input.audio) {
-      const transcribePrompt = ai.definePrompt({
-          name: 'transcribePrompt',
-          input: { schema: z.object({ audio: z.string() }) },
-          output: { schema: z.object({ transcription: z.string() }) },
-          prompt: `Transcribe the following audio: {{media url=audio}}`,
-      });
-      const { output } = await transcribePrompt({ audio: input.audio });
-      userMessage = output?.transcription || '';
+    if (input.audio && input.language) {
+        const { textOutput } = await processVoiceInput({
+            voiceDataUri: input.audio,
+            language: input.language,
+        });
+        userMessage = textOutput;
+        transcribedMessage = textOutput;
     }
 
     if (!userMessage) {
         return { response: "I'm sorry, I couldn't understand that. Could you please repeat?" };
     }
 
-    const { output } = await chatbotPrompt({
+    const {output} = await chatbotPrompt({
         history: input.history,
         message: userMessage,
         language: input.language,
     });
     
-    return output!;
+    return { ...output!, transcribedMessage: transcribedMessage };
   }
 );
 
