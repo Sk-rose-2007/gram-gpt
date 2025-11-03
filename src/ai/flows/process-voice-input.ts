@@ -1,10 +1,9 @@
 'use server';
 
 /**
- * @fileOverview This file defines a Genkit flow for processing voice input, converting it to text,
- * and providing plant health and growth recommendations in the same language.
+ * @fileOverview This file defines a Genkit flow for processing voice input, converting it to text.
  *
- * - processVoiceInput - Processes voice input and returns plant health recommendations.
+ * - processVoiceInput - Processes voice input and returns the transcribed text.
  * - ProcessVoiceInputInput - The input type for the processVoiceInput function.
  * - ProcessVoiceInputOutput - The return type for the processVoiceInput function.
  */
@@ -16,14 +15,14 @@ const ProcessVoiceInputInputSchema = z.object({
   voiceDataUri: z
     .string()
     .describe(
-      'Voice input as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.' 
+      "Voice input as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'." 
     ),
-  language: z.string().describe('The language of the voice input.'),
+  language: z.string().describe('The language of the voice input (e.g., en-US, es-ES).'),
 });
 export type ProcessVoiceInputInput = z.infer<typeof ProcessVoiceInputInputSchema>;
 
 const ProcessVoiceInputOutputSchema = z.object({
-  textOutput: z.string().describe('Plant health and growth recommendations in the same language as the input.'),
+  textOutput: z.string().describe('The transcribed text from the voice input in the specified language.'),
 });
 export type ProcessVoiceInputOutput = z.infer<typeof ProcessVoiceInputOutputSchema>;
 
@@ -31,14 +30,12 @@ const processVoiceInputPrompt = ai.definePrompt({
   name: 'processVoiceInputPrompt',
   input: {schema: ProcessVoiceInputInputSchema},
   output: {schema: ProcessVoiceInputOutputSchema},
-  prompt: `You are a helpful AI assistant specialized in providing plant health and growth recommendations.
-  The user will provide voice input in their native language.  Your task is to convert the voice input to text, analyze it for plant-related inquiries, and provide actionable recommendations in the same language.
+  prompt: `Transcribe the following audio recording. The user is speaking in {{language}}.
 
-  Voice Input ({{language}}):
+  Voice Input:
   {{media url=voiceDataUri}}
 
-  Provide clear, concise, and actionable recommendations for improving the plant's health and growth based on the user's input.
-`,
+  Your output should be only the transcribed text.`,
 });
 
 const processVoiceInputFlow = ai.defineFlow(
