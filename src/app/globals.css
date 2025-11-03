@@ -10,25 +10,32 @@
     --card-foreground: 138 28% 10%;
     --popover: 60 50% 93%;
     --popover-foreground: 138 28% 10%;
-    --primary: 138 28% 34%; /* Forest Green */
+    --primary: 124 34% 45%; /* Soft Green */
     --primary-foreground: 60 56% 95%;
     --secondary: 138 20% 60%;
     --secondary-foreground: 138 28% 10%;
     --muted: 138 20% 80%;
     --muted-foreground: 138 10% 40%;
-    --accent: 20 60% 50%; /* Burnt Orange */
+    --accent: 30 54% 48%; /* Earthy Brown */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 138 20% 70%;
     --input: 138 20% 80%;
-    --ring: 138 28% 34%;
-    --chart-1: 138 28% 34%;
-    --chart-2: 138 25% 45%;
-    --chart-3: 20 60% 50%;
-    --chart-4: 20 50% 60%;
+    --ring: 124 34% 45%;
+    --chart-1: 124 34% 45%;
+    --chart-2: 124 30% 55%;
+    --chart-3: 30 54% 48%;
+    --chart-4: 30 45% 58%;
     --chart-5: 60 50% 80%;
     --radius: 0.8rem;
+
+    --sidebar-background: 60 50% 93%;
+    --sidebar-foreground: 138 28% 10%;
+    --sidebar-border: 138 20% 70%;
+    --sidebar-accent: 124 34% 88%;
+    --sidebar-accent-foreground: 124 34% 20%;
+    --sidebar-ring: 124 34% 45%;
   }
 
   .dark {
@@ -38,24 +45,31 @@
     --card-foreground: 60 50% 92%;
     --popover: 138 10% 8%;
     --popover-foreground: 60 50% 92%;
-    --primary: 138 28% 44%;
+    --primary: 124 34% 55%;
     --primary-foreground: 60 56% 95%;
     --secondary: 138 15% 20%;
     --secondary-foreground: 60 50% 92%;
     --muted: 138 15% 25%;
     --muted-foreground: 60 40% 70%;
-    --accent: 20 60% 60%;
+    --accent: 30 54% 58%;
     --accent-foreground: 0 0% 10%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
     --border: 138 15% 25%;
     --input: 138 15% 25%;
-    --ring: 138 28% 44%;
-    --chart-1: 138 28% 44%;
-    --chart-2: 138 25% 55%;
-    --chart-3: 20 60% 60%;
-    --chart-4: 20 50% 70%;
+    --ring: 124 34% 55%;
+    --chart-1: 124 34% 55%;
+    --chart-2: 124 30% 65%;
+    --chart-3: 30 54% 58%;
+    --chart-4: 30 45% 68%;
     --chart-5: 60 50% 80%;
+
+    --sidebar-background: 138 10% 12%;
+    --sidebar-foreground: 60 50% 92%;
+    --sidebar-border: 138 15% 25%;
+    --sidebar-accent: 124 34% 20%;
+    --sidebar-accent-foreground: 60 50% 92%;
+    --sidebar-ring: 124 34% 55%;
   }
 }
 
@@ -65,7 +79,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image: url('https://images.unsplash.com/photo-1554118873-55a6d51789a0?q=80&w=2940&auto=format&fit=crop');
+    background-image: url('https://images.unsplash.com/photo-1453235421228-521a02641034?q=80&w=2938&auto=format&fit=crop');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
