@@ -31,7 +31,7 @@ export default function HistoryPage() {
     <div className="space-y-6">
       {history.length > 0 && (
         <div className="flex justify-end">
-            <Button variant="destructive" onClick={handleClearHistory}>
+            <Button variant="outline" onClick={handleClearHistory}>
                 <Trash className="mr-2 h-4 w-4" />
                 Clear History
             </Button>
