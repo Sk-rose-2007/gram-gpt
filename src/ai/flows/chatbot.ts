@@ -12,6 +12,38 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { processVoiceInput } from './process-voice-input';
 
+// Simulated market price data for common items in India (prices in INR per kg)
+const marketPrices: { [key: string]: { min: number; max: number } } = {
+  // Vegetables
+  "tomato": { min: 20, max: 40 },
+  "potato": { min: 15, max: 30 },
+  "onion": { min: 25, max: 45 },
+  "carrot": { min: 30, max: 50 },
+  "cabbage": { min: 15, max: 25 },
+  "cauliflower": { min: 25, max: 40 },
+  "spinach": { min: 10, max: 20 }, // per bunch
+  "brinjal": { min: 20, max: 35 },
+  "ladyfinger": { min: 30, max: 45 },
+  "okra": { min: 30, max: 45 },
+  "capsicum": { min: 40, max: 60 },
+  "bell pepper": { min: 40, max: 60 },
+  "cucumber": { min: 20, max: 35 },
+  
+  // Fruits
+  "apple": { min: 100, max: 180 },
+  "banana": { min: 30, max: 50 }, // per dozen
+  "mango": { min: 60, max: 120 },
+  "orange": { min: 50, max: 80 },
+  "grapes": { min: 80, max: 120 },
+  "guava": { min: 40, max: 60 },
+  "watermelon": { min: 15, max: 25 },
+  
+  // Other
+  "organic basil": { min: 80, max: 120 },
+  "basil": { min: 50, max: 80 },
+};
+
+
 const getMarketPriceTool = ai.defineTool(
   {
     name: 'getMarketPrice',
@@ -25,9 +57,18 @@ const getMarketPriceTool = ai.defineTool(
     }),
   },
   async ({ cropName }) => {
-    // In a real application, you would fetch this from a real-time market data API.
-    // For demonstration, we'll generate a random price in a reasonable INR range.
-    const price = parseFloat((Math.random() * 100 + 50).toFixed(2)); // e.g., 50 to 150 INR
+    const normalizedCropName = cropName.toLowerCase();
+    const priceRange = marketPrices[normalizedCropName];
+    
+    let price: number;
+    if (priceRange) {
+      // Generate a price within the defined range for that crop
+      price = parseFloat((Math.random() * (priceRange.max - priceRange.min) + priceRange.min).toFixed(2));
+    } else {
+      // Generate a generic price for items not in the list
+      price = parseFloat((Math.random() * 100 + 50).toFixed(2));
+    }
+
     return { price, currency: 'INR' };
   }
 );
