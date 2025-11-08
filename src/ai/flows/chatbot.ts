@@ -15,19 +15,20 @@ import { processVoiceInput } from './process-voice-input';
 const getMarketPriceTool = ai.defineTool(
   {
     name: 'getMarketPrice',
-    description: 'Get the current market price for a specific crop.',
+    description: 'Get the current market price for a specific crop in Indian Rupees (INR).',
     inputSchema: z.object({
       cropName: z.string().describe('The name of the crop to get the price for, e.g., "organic basil"'),
     }),
     outputSchema: z.object({
-      price: z.number().describe('The market price per standard unit (e.g., per pound).'),
+      price: z.number().describe('The market price in INR per standard unit (e.g., per kg).'),
+      currency: z.string().describe('The currency of the price, which is always INR.'),
     }),
   },
   async ({ cropName }) => {
     // In a real application, you would fetch this from a real-time market data API.
-    // For demonstration, we'll generate a random price.
-    const price = parseFloat((Math.random() * 5 + 1).toFixed(2));
-    return { price };
+    // For demonstration, we'll generate a random price in a reasonable INR range.
+    const price = parseFloat((Math.random() * 100 + 50).toFixed(2)); // e.g., 50 to 150 INR
+    return { price, currency: 'INR' };
   }
 );
 
@@ -63,7 +64,7 @@ const chatbotPrompt = ai.definePrompt(
     tools: [getMarketPriceTool],
     prompt: `You are a friendly and knowledgeable plant care expert named GramGPT. Engage in a conversation with the user, providing helpful advice and answering their questions about plants. Respond in the user's language, which is '{{language}}'.
 
-    If the user asks for the market price of a crop, use the getMarketPrice tool to find the information.
+    If the user asks for the market price of a crop, use the getMarketPrice tool to find the information. The price will be in Indian Rupees (INR). Make sure to state the currency in your response.
 
     Here is the conversation history so far:
     {{#each history}}
@@ -90,29 +91,39 @@ const chatbotFlow = ai.defineFlow(
 
     // If there's audio, transcribe it to get the text message
     if (input.audio && input.language) {
-        const { textOutput } = await processVoiceInput({
-            voiceDataUri: input.audio,
-            language: input.language,
-        });
-        userMessage = textOutput;
-        transcribedMessage = textOutput;
+        try {
+            const { textOutput } = await processVoiceInput({
+                voiceDataUri: input.audio,
+                language: input.language,
+            });
+            userMessage = textOutput;
+            transcribedMessage = textOutput;
+        } catch (error) {
+            console.error('Voice input processing error:', error);
+            return { response: "I'm sorry, I had trouble understanding your audio. Could you please try again?" };
+        }
     }
 
     if (!userMessage) {
         return { response: "I'm sorry, I couldn't understand that. Could you please repeat?" };
     }
 
-    const {output} = await chatbotPrompt({
-        history: input.history,
-        message: userMessage,
-        language: input.language,
-    });
-    
-    if (!output) {
-      return { response: "I'm sorry, I couldn't generate a response. Please try again." };
+    try {
+        const {output} = await chatbotPrompt({
+            history: input.history,
+            message: userMessage,
+            language: input.language,
+        });
+        
+        if (!output) {
+          return { response: "I'm sorry, I couldn't generate a response. Please try again." };
+        }
+        
+        return { ...output, transcribedMessage: transcribedMessage };
+    } catch (error) {
+        console.error('Chatbot flow error:', error);
+        return { response: "Sorry, I'm having a little trouble connecting to my knowledge base. Please try again in a moment." };
     }
-    
-    return { ...output, transcribedMessage: transcribedMessage };
   }
 );
 
