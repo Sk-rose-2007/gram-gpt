@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ThumbsUp, ThumbsDown, AlertTriangle, UploadCloud, Stethoscope, Pilcrow, Sparkles, Languages, Play, Pause } from "lucide-react";
+import { ThumbsUp, ThumbsDown, AlertTriangle, Stethoscope, Pilcrow, Sparkles, Languages, Play, Pause, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
@@ -92,6 +92,16 @@ export function ImageAnalysis() {
       setAudioState({ isPlaying: false, progress: 0 });
       setDescription("");
     }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    setImageFile(null);
+    setAnalysisResult(null);
+    setError(null);
+    setImprovedRecommendation(null);
+    setAudioState({ isPlaying: false, progress: 0 });
+    setDescription("");
   };
 
   const handleAnalyze = () => {
@@ -214,18 +224,30 @@ export function ImageAnalysis() {
   return (
     <div className="space-y-6">
       <audio ref={audioRef} className="hidden" />
-      <div className="p-4 border-2 border-dashed rounded-lg text-center bg-card/50 space-y-4">
-        <div className="flex justify-center">
-            <UploadCloud className="w-12 h-12 text-muted-foreground"/>
-        </div>
-        {imagePreview ? (
-          <div className="relative w-full max-w-md mx-auto aspect-video">
-            <Image src={imagePreview} alt="Plant preview" layout="fill" objectFit="contain" className="rounded-md" />
-          </div>
+      <div className="p-4 border-2 border-dashed rounded-lg text-center bg-card/50">
+        {!imagePreview ? (
+            <label htmlFor="picture" className="flex flex-col items-center justify-center w-full h-48 cursor-pointer rounded-lg hover:bg-card/70 transition-colors">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Plus className="w-10 h-10 text-muted-foreground mb-3" />
+                    <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span></p>
+                    <p className="text-xs text-muted-foreground">an image of your plant</p>
+                </div>
+                <Input id="picture" type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+            </label>
         ) : (
-          <p className="text-muted-foreground">Select an image to see a preview</p>
+            <div className="relative w-full max-w-md mx-auto aspect-video">
+                <Image src={imagePreview} alt="Plant preview" layout="fill" objectFit="contain" className="rounded-md" />
+                <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-7 w-7 rounded-full"
+                    onClick={handleRemoveImage}
+                >
+                    <X className="h-4 w-4" />
+                    <span className="sr-only">Remove image</span>
+                </Button>
+            </div>
         )}
-        <Input id="picture" type="file" accept="image/*" onChange={handleImageChange} className="max-w-sm mx-auto file:text-primary file:font-semibold"/>
       </div>
       
       <div className="space-y-4">

@@ -3,7 +3,7 @@ import { ImageAnalysis } from "@/components/image-analysis";
 
 export default function ImageAnalysisPage() {
   return (
-    <Card className="bg-card/80 backdrop-blur-sm">
+    <Card className="bg-card/80 backdrop-blur-sm max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Plant Disease Detection</CardTitle>
         <CardDescription>Upload an image of your plant to detect diseases and get treatment recommendations.</CardDescription>
