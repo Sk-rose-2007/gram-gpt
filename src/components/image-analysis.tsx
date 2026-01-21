@@ -40,6 +40,7 @@ export function ImageAnalysis() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [description, setDescription] = useState("");
   
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
@@ -89,6 +90,7 @@ export function ImageAnalysis() {
       setError(null);
       setImprovedRecommendation(null);
       setAudioState({ isPlaying: false, progress: 0 });
+      setDescription("");
     }
   };
 
@@ -110,7 +112,7 @@ export function ImageAnalysis() {
       try {
         const result = await analyzeImageAndDetectDisease({
           photoDataUri: imagePreview,
-          description: "A user-uploaded plant image.",
+          description: description || "A user-uploaded plant image. Please identify the plant, check its health, and describe any visible issues.",
           language: language,
         });
         setAnalysisResult(result);
@@ -226,23 +228,30 @@ export function ImageAnalysis() {
         <Input id="picture" type="file" accept="image/*" onChange={handleImageChange} className="max-w-sm mx-auto file:text-primary file:font-semibold"/>
       </div>
       
-      <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex items-center gap-2">
-              <Languages className="w-5 h-5 text-muted-foreground" />
-              <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Language" />
-                </SelectTrigger>
-                <SelectContent>
-                  {supportedLanguages.map(lang => (
-                    <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-          </div>
-        <Button onClick={handleAnalyze} disabled={isPending || !imageFile} className="w-full flex-1">
-            {isPending ? "Analyzing..." : "Analyze Plant Image"}
-        </Button>
+      <div className="space-y-4">
+        <Textarea 
+            placeholder="Optionally, ask a specific question about the plant in the image..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+        />
+        <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center gap-2">
+                <Languages className="w-5 h-5 text-muted-foreground" />
+                <Select value={language} onValueChange={setLanguage}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {supportedLanguages.map(lang => (
+                      <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+            </div>
+          <Button onClick={handleAnalyze} disabled={isPending || !imageFile} className="w-full flex-1">
+              {isPending ? "Analyzing..." : "Analyze Plant Image"}
+          </Button>
+        </div>
       </div>
 
       {isPending && (
