@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { Stethoscope, Pilcrow, Sparkles, AlertTriangle, FileText, HeartPulse, ListTree, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -25,7 +25,8 @@ type HealthReport = {
   recommendations: string;
 };
 
-export default function HistoryDetailPage({ params }: { params: { id: string } }) {
+export default function HistoryDetailPage() {
+  const params = useParams<{ id: string }>();
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const [item, setItem] = useState<AnalysisRecord | null | undefined>(undefined);
@@ -34,7 +35,9 @@ export default function HistoryDetailPage({ params }: { params: { id: string } }
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    setItem(getHistoryItem(params.id));
+    if (params.id) {
+      setItem(getHistoryItem(params.id));
+    }
   }, [params.id]);
 
   const handleGenerateReport = () => {
