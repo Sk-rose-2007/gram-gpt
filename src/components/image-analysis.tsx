@@ -18,6 +18,7 @@ import { Textarea } from "./ui/textarea";
 import { addToHistory } from "@/lib/history";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "./ui/progress";
+import { useLanguage } from "@/context/language-context";
 
 type AnalysisResult = {
   diagnosis: string;
@@ -32,18 +33,6 @@ type AudioState = {
   progress: number;
 };
 
-const supportedLanguages = [
-    { value: "en-US", label: "English" },
-    { value: "es-ES", label: "Spanish" },
-    { value: "fr-FR", label: "French" },
-    { value: "de-DE", label: "German" },
-    { value: "hi-IN", label: "Hindi" },
-    { value: "ja-JP", label: "Japanese" },
-    { value: "zh-CN", label: "Chinese" },
-    { value: "ta-IN", label: "Tamil" },
-    { value: "pa-IN", label: "Punjabi" },
-];
-
 export function ImageAnalysis() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -57,15 +46,11 @@ export function ImageAnalysis() {
   const [originalRecommendation, setOriginalRecommendation] = useState("");
   const [improvedRecommendation, setImprovedRecommendation] = useState<string | null>(null);
   
-  const [language, setLanguage] = useState("en-US");
+  const { language, setLanguage, supportedLanguages } = useLanguage();
   const [audioState, setAudioState] = useState<AudioState>({ isPlaying: false, progress: 0 });
   const audioRef = useRef<HTMLAudioElement>(null);
   
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.navigator) {
-        setLanguage(navigator.language || 'en-US');
-    }
-    
     const audioEl = audioRef.current;
     const onAudioEnd = () => {
         setAudioState(prev => ({ ...prev, isPlaying: false, progress: 0, activeAudio: undefined }));

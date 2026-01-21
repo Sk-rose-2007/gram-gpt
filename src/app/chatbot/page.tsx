@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
+import { useLanguage } from '@/context/language-context';
 
 type Message = {
   id: string;
@@ -31,18 +32,6 @@ const defaultQuestions = [
   "How can I encourage more growth in my fiddle leaf fig?",
 ];
 
-const supportedLanguages = [
-    { value: "en-US", label: "English" },
-    { value: "es-ES", label: "Spanish" },
-    { value: "fr-FR", label: "French" },
-    { value: "de-DE", label: "German" },
-    { value: "hi-IN", label: "Hindi" },
-    { value: "ja-JP", label: "Japanese" },
-    { value: "zh-CN", label: "Chinese" },
-    { value: "ta-IN", label: "Tamil" },
-    { value: "pa-IN", label: "Punjabi" },
-];
-
 export default function ChatbotPage() {
   const [isPending, startTransition] = useTransition();
   const [isRecording, setIsRecording] = useState(false);
@@ -52,14 +41,10 @@ export default function ChatbotPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [language, setLanguage] = useState("en-US");
+  const { language, setLanguage, supportedLanguages } = useLanguage();
   const [activeAudioMessageId, setActiveAudioMessageId] = useState<string | null>(null);
 
   useEffect(() => {
-    if(typeof window !== 'undefined' && window.navigator) {
-        setLanguage(navigator.language || 'en-US');
-    }
-
     const audioEl = audioRef.current;
 
     const onAudioEnd = () => {
