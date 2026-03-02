@@ -143,8 +143,8 @@ export function ImageAnalysis() {
           console.error('TTS Error:', ttsError);
           toast({
             variant: "destructive",
-            title: "Text-to-Speech Failed",
-            description: "Could not generate audio. You may have exceeded the API quota.",
+            title: "Audio Generation Failed",
+            description: "Could not generate audio. Please try again.",
           });
         }
 
@@ -154,7 +154,7 @@ export function ImageAnalysis() {
         toast({
           variant: "destructive",
           title: "Analysis Failed",
-          description: "An error occurred during image analysis.",
+          description: "An error occurred during image analysis. Please try again.",
         });
       }
     });
