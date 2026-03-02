@@ -27,9 +27,9 @@ type Message = {
 };
 
 const defaultQuestions = [
-  "What's the market price for organic basil?",
+  "What's the market price for potatoes?",
   "What's the best soil type for tomatoes?",
-  "How can I encourage more growth in my fiddle leaf fig?",
+  "How can I encourage more growth in my banana plant?",
 ];
 
 export default function ChatbotPage() {
@@ -141,8 +141,8 @@ export default function ChatbotPage() {
           console.error('TTS Error:', ttsError);
           toast({
             variant: "destructive",
-            title: "Text-to-Speech Failed",
-            description: "Could not generate audio. You may have exceeded the API quota.",
+            title: "Audio Generation Failed",
+            description: "Could not generate audio. Please try again later.",
           });
         }
         
@@ -150,8 +150,8 @@ export default function ChatbotPage() {
         console.error('Error with chatbot:', error);
         toast({
           variant: "destructive",
-          title: "AI Error",
-          description: "There was a problem communicating with the AI. Please try again.",
+          title: "Error",
+          description: "There was a problem communication. Please try again.",
         });
         setMessages(prev => prev.filter(m => m.id !== userMessage.id));
       }
@@ -236,8 +236,8 @@ export default function ChatbotPage() {
           console.error('TTS Error:', ttsError);
           toast({
               variant: "destructive",
-              title: "Text-to-Speech Failed",
-              description: "Could not generate audio. You may have exceeded the API quota.",
+              title: "Audio Generation Failed",
+              description: "Could not generate audio. Please try again later.",
           });
         }
 
@@ -245,7 +245,7 @@ export default function ChatbotPage() {
         console.error('Error with voice message:', error);
         toast({
           variant: "destructive",
-          title: "AI Error",
+          title: "Error",
           description: "There was a problem processing your voice message.",
         });
         setMessages(prev => prev.filter(m => m.id !== tempUserMessageId));
