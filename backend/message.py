@@ -34,6 +34,10 @@ qa = {
     "thanks": "You're welcome 😊"
 }
 
+@app.route("/", methods=["GET"])
+def home():
+    return "Server running"
+
 @app.route("/sms", methods=["POST"])
 def sms_reply():
     incoming_msg = request.form.get("Body").strip().lower()
